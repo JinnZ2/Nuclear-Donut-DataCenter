@@ -57,3 +57,17 @@ Power Supply and Wiring Guide (Quick Copy-Paste Format)
 	•	NC (normally closed) relay triggered from digital pin
 	•	Disconnects heat source if emergency triggered
 	•	Optional: LED status indicators and manual override switch
+
+
+[12V Power Supply]
+       |
+       +---> [Fans via MOSFETs] ← Controlled by Arduino PWM
+       +---> [Solenoid Valves via MOSFETs]
+       +---> [Relay (for emergency cutoff)]
+       +---> [Buck Converter → Arduino 5V]
+
+[Arduino]
+  +---> Temp Sensors (DS18B20) on digital pins
+  +---> Humidity Sensor (DHT22)
+  +---> Current Sensor (analog or I2C)
+  +---> Controls fans, valves, relay via digital pins
