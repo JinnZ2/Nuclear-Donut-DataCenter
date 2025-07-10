@@ -15,7 +15,9 @@ This project visualizes a next-generation data center optimized for:
 ##  Key Features
 
 - **Power**: Direct from 10-20MW nuclear reactor
-- **Cooling**: Steam + evaporative = 90% energy savings
+- **Cooling**: Steam + evaporative
+-
+-   = 90% energy savings
 - **Architecture**: Donut-style radial layout
 - **Location**: Within existing nuclear exclusion zones (zero land cost)
 - **Security**: Already nuclear-hardened
@@ -49,3 +51,23 @@ MIT or CC0 – feel free to use, improve, or deploy.
 
 # Nuclear-Donut-DataCenter
 Nuclear-integrated, biomimetic data center using radial steam cooling and evaporative architecture for ultra-efficient, scalable computing.
+
+Bio-Inspired Heat Dissipation Prototype
+
+A desktop-scale thermal management system inspired by biology, designed to demonstrate advanced cooling principles for future nuclear data centers and high-energy applications.
+
+ Features:
+	•	Fractal copper fins (lung/gill geometry)
+	•	Heat pipe circulation (blood vessels)
+	•	Paraffin wax phase-change buffer (sweat glands)
+	•	Pulsatile fan convection (respiratory mimicry)
+	•	Radiative copper cooling panels (elephant ears)
+	•	Arduino-based real-time monitoring and control
+	•	Safe, modular, testable on a desktop
+
+Performance Targets:
+	•	<0.5 K/W thermal resistance
+	•	90% heat removal efficiency
+	•	Rapid response (<30s)
+	•	Integrated multi-mode cooling synergy
+
