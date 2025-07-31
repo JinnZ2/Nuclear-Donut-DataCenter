@@ -41,6 +41,22 @@ This project visualizes a next-generation data center optimized for:
 - Modular expansion visualizer
 - Open-source dataset + blueprint system
 
+- Key Files
+
+- `1MWDataCenterBOM.md` – Bill of Materials
+- `Construction-sim.md` – Build and test environment
+- `Controller-overview.md` – AI & thermal control logic
+- `Design-concept.md` – Architectural and geometric logic
+- `Heat-dissipation-protocol.md` – Thermal systems
+
+## 🧠 Status
+
+Ongoing design & simulation phase. Seeking collaborators, symbolic optimization, and feedback.
+
+---
+
+Made with resilience in mind by [JinnZ2](https://github.com/JinnZ2)
+
 ##  License
 
 MIT or CC0 – feel free to use, improve, or deploy.
