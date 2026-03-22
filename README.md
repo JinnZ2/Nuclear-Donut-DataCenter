@@ -49,6 +49,7 @@ This project visualizes a next-generation data center optimized for:
 - `Controller-overview.md` - AI and thermal control logic
 - `Wiring-control-rules.md` - Electrical wiring and mode logic
 - `Prototype-build-list.md` - Materials list for desktop prototype
+- `Thermoacoustic-harvesting.md` - Acoustic energy harvesting from donut resonance
 - `Remediation-toolkit.md` - Environmental remediation physics toolkit
 
 ## Status

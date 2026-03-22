@@ -21,6 +21,7 @@ Nuclear-Donut-DataCenter/
 ├── Controller-overview.md         # Arduino/Python control system design
 ├── Wiring-control-rules.md        # Electrical wiring and cooling mode logic
 ├── Prototype-build-list.md        # Materials list for desktop prototype
+├── Thermoacoustic-harvesting.md   # Acoustic energy harvesting from donut resonance
 └── Remediation-toolkit.md         # Environmental remediation physics toolkit (15 disciplines)
 ```
 
@@ -76,6 +77,7 @@ To view the visualization, open `Index.html` directly in a browser.
 - **Cooling modes:** Seven operational states from IDLE through EMERGENCY, managed by Arduino controller with sensor feedback loops
 - **Phase change materials (PCM):** Paraffin wax thermal buffers for load smoothing
 - **Geothermal integration:** 600m+ underground coil mesh for supplementary heat rejection
+- **Thermoacoustic harvesting:** Donut resonance converted to electricity or cooling via travelling-wave engines, linear alternators, and thermoacoustic refrigerators
 
 ## Documentation Map
 
@@ -89,6 +91,7 @@ To view the visualization, open `Index.html` directly in a browser.
 | `Controller-overview.md` | Controls | Arduino sensor/actuator design, 7 cooling modes |
 | `Wiring-control-rules.md` | Electrical | Wiring diagrams, mode transition logic |
 | `Prototype-build-list.md` | Materials | Shopping list for desktop prototype build |
+| `Thermoacoustic-harvesting.md` | Energy recovery | Harvesting donut resonance via thermoacoustic engines |
 | `Remediation-toolkit.md` | Remediation | 15 physics disciplines for environmental cleanup |
 
 ## Working with This Repository
