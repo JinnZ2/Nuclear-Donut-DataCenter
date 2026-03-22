@@ -1,55 +1,67 @@
-CONTROLLER OVERVIEW
+# Controller Overview
 
-Goal: Python + Arduino system for managing cooling modes based on temperature, humidity, sensor status, and time.
+**Goal:** Python + Arduino system for managing cooling modes based on temperature, humidity, sensor status, and time.
 
-⸻
+---
 
- SYSTEM ARCHITECTURE
+## System Architecture
 
- Controller Board:
-	•	Arduino Uno (or Nano for compact build)
-	•	12V Power input (buck converter to 5V for logic)
+### Controller Board
 
- Sensors:
-	•	DS18B20 — 6x digital temp sensors
-	•	DHT22 — for ambient humidity
-	•	CurrentSensor (ACS712) — for load monitoring
-	•	ThermalSpike switch (normally closed thermal fuse)
+- Arduino Uno (or Nano for compact build)
+- 12V Power input (buck converter to 5V for logic)
 
- Actuators:
-	•	4x 40mm Fans — PWM control via N-channel MOSFETs
-	•	Heating element — via relay (or solid-state relay)
-	•	Emergency buzzer + LED (status indicator)
+### Sensors
 
-⸻
+- DS18B20 - 6x digital temp sensors
+- DHT22 - for ambient humidity
+- ACS712 current sensor - for load monitoring
+- ThermalSpike switch (normally closed thermal fuse)
 
-WIRING PLAN
+### Actuators
 
- Power Wiring:
+- 4x 40mm Fans - PWM control via N-channel MOSFETs
+- Heating element - via relay (or solid-state relay)
+- Emergency buzzer + LED (status indicator)
 
- 12V Input →
- ├──> Buck Converter (5V logic)
- ├──> Fans (through MOSFETs)
- └──> Relay → Heating Element
+---
 
- sensor Wiring:
+## Wiring Plan
 
- DS18B20: Digital (D2-D7) + shared pull-up resistor  
-DHT22: Digital pin D8  
-ACS712: Analog A0  
-Thermal Spike: Digital pin D9 (input w/ pull-down)  
+### Power Wiring
 
-Output Wiring:
+```
+12V Input
+├──> Buck Converter (5V logic)
+├──> Fans (through MOSFETs)
+└──> Relay → Heating Element
+```
 
+### Sensor Wiring
+
+```
+DS18B20: Digital (D2-D7) + shared pull-up resistor
+DHT22:   Digital pin D8
+ACS712:  Analog A0
+Thermal Spike: Digital pin D9 (input w/ pull-down)
+```
+
+### Output Wiring
+
+```
 Fan 1 → D10 (PWM via MOSFET)
-Fan 2 → D11  
-Fan 3 → D3  
-Fan 4 → D5  
-Relay → D6  
-Buzzer/LED → D12  
+Fan 2 → D11
+Fan 3 → D3
+Fan 4 → D5
+Relay → D6
+Buzzer/LED → D12
+```
 
-Python like andyino controller (sim code)
+---
 
+## Mode Logic (Arduino C)
+
+```c
 // Mode Logic Trigger Definitions
 enum Mode { IDLE, PULSE, EVAP, GEO, MAX, ADAPTIVE, EMERGENCY };
 Mode currentMode = IDLE;
@@ -100,19 +112,20 @@ void loop() {
   applyFanPattern(currentMode);
   delay(500);
 }
+```
 
+---
 
-mode summary:
+## Mode Summary
 
+| Mode | Trigger | Bio-Inspiration |
+|------|---------|-----------------|
+| `idle()` | Low temp, nighttime, no load | Night cycle |
+| `pulse_cooling()` | Rhythmic fan pulses | Respiration |
+| `evaporative()` | High humidity + heat | Termite logic |
+| `geothermal()` | Dry + heat | Moist coil circulation |
+| `max_cooling()` | Spike or overload | Fight-or-flight |
+| `adaptive()` | Blend of sensor logic | Homeostasis |
+| `emergency()` | Hibernate or shut down | Survival mode |
 
-idle()           → low temp, nighttime, no load
-pulse_cooling()  → rhythmic fan pulses (respiration)
-evaporative()    → high humidity + heat → termite logic
-geothermal()     → dry + heat → moist coil circulation
-max_cooling()    → spike or overload
-adaptive()       → blend of sensor logic
-emergency()      → hibernate or shut down
-
-( not perfect- made on notes on cellphone)
-
- 
+*Note: Made on notes on cellphone - not production code.*

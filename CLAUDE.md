@@ -56,11 +56,14 @@ To view the visualization, open `Index.html` directly in a browser.
 
 ### Markdown documentation
 - Standard header hierarchy (`#` for title, `##` for sections, `###` for subsections)
-- Bold for key terms, code blocks for equations/formulas
-- Tables for comparisons (e.g., traditional vs. donut design metrics)
-- Bullet points for specifications and feature lists
+- Bold for key terms, fenced code blocks for equations/formulas and diagrams
+- Markdown tables for comparisons (pipe-delimited with header row)
+- Dash-prefixed bullet points (`- `) for specifications and feature lists
+- `---` horizontal rules for section dividers
+- File naming: `Descriptive-name.md` (capitalized, hyphen-separated)
 
 ### Arduino/control pseudo-code
+- Fenced code blocks with `c` language annotation
 - Enum-style mode constants: `IDLE`, `PULSE`, `EVAP`, `GEO`, `MAX`, `ADAPTIVE`, `EMERGENCY`
 - Descriptive function names: `updateMode()`, `applyFanPattern()`, `readAverageTemp()`
 - Comments explaining each mode's purpose and trigger conditions
