@@ -51,6 +51,8 @@ This project visualizes a next-generation data center optimized for:
 - `Prototype-build-list.md` - Materials list for desktop prototype
 - `Thermoacoustic-harvesting.md` - Acoustic energy harvesting from donut resonance
 - `Remediation-toolkit.md` - Environmental remediation physics toolkit
+- `harmonic_sim.py` - Resonant mode, standing wave, and Coriolis airflow simulation
+- `water_sim.py` - Monthly water budget, recovery, and Coriolis water flow simulation
 
 ## Status
 
