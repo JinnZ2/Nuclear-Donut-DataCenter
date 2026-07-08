@@ -60,6 +60,22 @@ Ongoing design and simulation phase. Seeking collaborators, symbolic optimizatio
 
 ---
 
+
+## 🌱 CISSR Integration
+
+The **Cyber-Integrated Self-Sustaining Regeneration (CISSR)** framework bridges BioGrid2.0's regenerative philosophy with this data center's physical infrastructure. It enables:
+
+- **Material self-healing** (crystalline, polymer, and nanoparticle-based)
+- **Biological remediation** (engineered microbes for water purification and crack sealing)
+- **Symbolic control logic** (AI-driven damage prediction and response)
+
+### Core Documents
+- [CISSR Framework](CISSR/cissr-framework.md)
+- [BioGrid2.0 Bridge](CISSR/biogrid-bridge.md)
+- [Implementation Plan](CISSR/cissr-implementation-plan.md)
+- [Sensor Specification](CISSR/cissr_sensors_spec.md)
+- [Simulation Module](CISSR/cissr_sim.py)
+
 Made with resilience in mind by [JinnZ2](https://github.com/JinnZ2)
 
 ## License
