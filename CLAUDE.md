@@ -79,10 +79,13 @@ python3 water_sim.py             # monthly water budget, Coriolis water effects
 python3 CISSR/cissr_sim.py       # healing kinetics, microbial activity, sensor fusion
 ```
 
-**All three exit 0. That is not the same as being correct.** `water_sim.py` currently prints
-a thermoacoustic water saving greater than 100% of gross consumption, which is impossible;
-the script says so itself at runtime. Read `legacy/run-log.md` before quoting any simulation
-output, and add an entry there whenever a run contradicts a claim.
+**All three exit 0. That is not the same as being correct.** `water_sim.py`'s evaporative
+model rejects only 7–12% of the IT load and never accounts for the rest, so its water figures
+are understated by roughly 10×; a downstream symptom is a thermoacoustic "saving" above 100%
+of gross consumption, which the script flags at runtime. `CISSR/cissr_sim.py` declares a
+healing rate ~336× faster than the self-healing-concrete literature and seeds no RNG.
+Read `legacy/run-log.md` before quoting any simulation output, and add an entry there
+whenever a run contradicts a claim.
 
 Both scripts accept `--help` for configurable parameters (radius, latitude, capacity, etc.).
 Output charts are saved to `sim_output/` (git-ignored, regenerated on each run).

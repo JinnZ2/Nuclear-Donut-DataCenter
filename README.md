@@ -69,8 +69,11 @@ Two files carry that record, and neither is optional reading:
 
 - **[`legacy/run-log.md`](legacy/run-log.md)** — every time a claim in this repo was actually
   executed and checked: what it predicted, what the run printed, and whether that falsified
-  it. Currently open: four defects in the water model, including a thermoacoustic "saving"
-  that exceeds 100% of water consumed. **Check it before quoting any simulation number.**
+  it. Eleven entries so far. The one that matters most: **the evaporative cooling model does
+  not conserve energy** — it rejects 7–12% of the IT load and never accounts for the rest, so
+  water demand is understated by roughly 10×. Implied WUE is 0.12–0.19 L/kWh against a
+  real-world 1.55–2.5 L/kWh for evaporatively-cooled facilities.
+  **Check the log before quoting any simulation number.**
 - **[`legacy/README.md`](legacy/README.md)** — what has been retired, and why. Superseded
   files are moved here with their reasoning attached; they are never deleted. A claim that
   was tested and replaced is still a result, and the precedent it set still carries.

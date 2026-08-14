@@ -123,3 +123,194 @@ Consolidated list of everything the runs above opened and nobody has closed:
 6. `CISSR/cissr_sim.py` runs and prints healing counts, but nothing in the repo says what
    those counts *should* be. Until there is a predicted value, its output is **UNDECIDABLE**
    in the sense used above — it cannot be falsified, so it cannot yet be evidence.
+
+---
+
+## 2026-08-14 (second session) — Reality-testing the six carried-forward unknowns
+
+Method: a probe harness importing `water_sim` directly and evaluating each model function
+month by month, plus two external benchmark checks against published figures. Every number
+below is reproducible by re-running the models; the external figures are cited inline.
+
+**Result: five of the six are now closed, and closing them exposed a defect larger than any
+of them.** Two further arithmetic bugs were found and fixed in passing.
+
+---
+
+### Entry 5 — Reported water recovery double-counts the offset
+
+- **Claim** — `total_recovery_L_day` is the sum of condenser, dew, and thermoacoustic recovery.
+- **Run** — the probe computed `cond + dew + ta_offset` = 1,380,900 L/yr. The script reported
+  2,689,898 L/yr. The difference is exactly 1,308,998 L/yr — the offset, counted a second time.
+  Source: `recovery` was already defined as `cond + dew + ta_offset`, then stored as
+  `recovery + ta_offset`.
+- **Verdict** — **FALSIFIED.** Pure double-count.
+- **Edited claim** — fixed. Reported annual recovery is 1,380,900 L/yr. Net demand is
+  unaffected (it used the single-counted value), so no other figure moves.
+- **New unknowns** — none. Arithmetic.
+
+---
+
+### Entry 6 — The evaporative model does not conserve energy *(new, and it is the big one)*
+
+- **Claim** — `evaporative_water()` models the water needed to reject the data center's heat.
+- **Run** — the model rejects `capacity × 0.30 × effectiveness`. Evaluated across the year
+  that is **65.6–121.9 kW of a 1,000 kW IT load — 7% to 12%.** The other 88–93% is not
+  rejected anywhere else in the model. Geothermal is soil *irrigation* (27–81 L/day), not a
+  heat path; steam loss is a leak term. The heat simply vanishes.
+- **Reality check** — implied WUE is **0.119–0.187 L/kWh**. Published figures for
+  evaporatively-cooled data centers are **1.55–2.5 L/kWh**, with an industry average of
+  1.8–1.9 L/kWh. The model is ~10× low. (The model's number does land near AWS's reported
+  0.19 L/kWh — but AWS reaches that with extensive free-air cooling, not by evaporating less
+  water per unit of heat. Matching the number by the wrong mechanism is not agreement.)
+  Rejecting the *full* 1 MW evaporatively would need **38,230 L/day ≈ 1.59 L/kWh** — which
+  lands inside the real evaporative range, and is the strongest evidence that full-load
+  rejection is the correct form and the `0.30 × effectiveness` factor is the error.
+- **Verdict** — **FALSIFIED.** Wet-bulb effectiveness sets how close the tower can approach
+  the wet-bulb temperature. It does not reduce the quantity of heat that must leave the
+  building. Using it as a multiplier on heat load deletes energy from the balance.
+- **Edited claim** — evaporative water demand in this repo is understated by roughly an order
+  of magnitude. **No water figure in this project should be quoted until this is resolved.**
+- **New unknowns** —
+  1. What fraction of the IT load is actually rejected evaporatively vs. geothermally vs. by
+     free cooling? The model needs an explicit split that sums to 100%.
+  2. Does the geothermal loop have a heat-rejection capacity figure anywhere? It is currently
+     modelled only as soil irrigation, with no kW rating.
+- **Status** — documented, **not fixed.** The split across cooling paths is a design decision
+  and changing it rewrites every headline water number in the project.
+
+---
+
+### Entry 7 — U1: does the offset displace load, or produce water?
+
+- **Question** — is the thermoacoustic offset a displacement credit or a water source?
+- **Run** — settled by the code's own docstring: *"thermoacoustic_kw of cooling = that much
+  less evaporative cooling needed. Returns liters/day of water SAVED."*
+- **Verdict** — **ANSWERED: displacement.** It is a credit against evaporative load, which
+  means it must be capped at the evaporative load actually present. It was never a water
+  source, so it can never legitimately exceed consumption.
+- **Edited claim** — U1 is closed. `ta_offset` should be `min(offset, evap)`.
+- **Consequence, measured** — applying that cap: recovery falls from 135.1% to **80.2% of
+  gross**, and net demand rises from 108,720 to **202,095 L/yr (+86%)**. The cap alone makes
+  the model self-consistent, but see Entry 8 — it binds in all 12 months, which is itself a
+  symptom of Entry 6.
+
+---
+
+### Entry 8 — U2/U3: should the offset scale, and where does surplus go?
+
+- **Claim** — 160 kW of thermoacoustic cooling displaces evaporative demand.
+- **Run** — peak evaporative heat rejection all year is **121.9 kW (June)**; the annual
+  minimum during the active season is 65.6 kW. The 160 kW credit **exceeds the load it claims
+  to displace in every single month — 0 of 12 fit.** `thermoacoustic_offset()` also ignores
+  its `capacity_mw` argument entirely, so the credit is flat regardless of plant size.
+- **Verdict on U2** — **FALSIFIED, but not where expected.** A flat credit is wrong, yet the
+  *fix is not to scale the offset* — 160 kW is consistent with `harmonic_sim.py`'s own
+  40–300 kW range. The offset only looks impossible because Entry 6 understates the load it
+  is being subtracted from. Correct the energy balance and 160 kW becomes ~16% of a 1 MW
+  rejection load, which is unremarkable.
+- **Verdict on U3** — **DISSOLVED.** With the cap applied, recovery exceeds consumption in
+  **0 of 12 months**. There is no surplus, so no storage term is needed. U3 was never an
+  independent gap; it was Entry 2 wearing a different hat.
+- **Edited claim** — U3 is closed and withdrawn. U2 is closed: the offset does not need to
+  scale with load, it needs a load that is correctly sized. Both fold into Entry 6.
+- **New unknowns** — `thermoacoustic_offset()` accepting and discarding `capacity_mw` is a
+  latent trap for anyone who runs `--capacity-mw 10` and believes the output.
+
+---
+
+### Entry 9 — U5: is April frozen or not?
+
+- **Claim** — April is reported `FROZEN` while evaporating 2,867 L/day.
+- **Run** — the two gates read different media. `evaporative_water()` gates on **air**
+  temperature (`T_db < 5 °C → 0`); April air is +7 °C, so evaporation correctly runs.
+  `geothermal_water()` gates on `GROUND_FROZEN`, a **soil** state; northern Minnesota frost
+  leaves the ground through April, so soil-frozen in April is correct too.
+- **Verdict** — **NEITHER MODEL IS WRONG.** Both are right about their own medium. The defect
+  was the printed status column, which rendered a soil flag as a whole-system label.
+- **Edited claim** — fixed, and it was a labelling bug, not physics. Status now describes the
+  cooling system (`NO-EVAP` / `FREE` / `ACTIVE`) with `*` marking frozen soil. April now reads
+  `FREE*` — free cooling available, ground still frozen. Both facts, no contradiction.
+- **New unknowns** — none. **Note for the future:** this one was worth chasing precisely
+  because it turned out *not* to be a physics error. An apparent contradiction that resolves
+  into two correct models and one bad label is still a finding.
+
+---
+
+### Entry 10 — U4: should steam loss vary with ambient temperature?
+
+- **Claim** — steam loop loss is 720 L/day, constant across all twelve months.
+- **Run** — 1 MW × 1,500 kg/hr × 24 h × 2% blowdown = 720 L/day. That steam flow carries
+  ~942 kW of latent heat, consistent with a 1 MW load, so the flow figure is sound. Blowdown
+  is governed by cycles of concentration and makeup water chemistry; leak and trap losses by
+  joint integrity. None of those depend on outdoor air temperature.
+- **Verdict** — **HELD on the question asked; FALSIFIED on a question nobody asked.**
+  Constant *with ambient temperature* is defensible and stands. But `steam_losses()` takes no
+  month index at all, so it is also constant *with load* — while the model's own cooling
+  demand swings from 65.6 to 121.9 kW across the season. Blowdown scales with steam
+  throughput, and throughput is not constant.
+- **Edited claim** — steam loss should be constant per unit of steam *flow*, not constant per
+  *day*. The 2% fraction is right; applying it to a fixed flow is not.
+- **New unknowns** — does the steam loop run at constant flow year-round (reactor always at
+  full output, excess dumped) or does it follow load? That is a plant operating decision and
+  nothing in the repo states it.
+
+---
+
+### Entry 11 — U6: can `cissr_sim.py` be falsified?
+
+- **Claim** — recorded on 2026-08-14 as **UNDECIDABLE**: the sim prints healing counts but
+  nothing says what they should be.
+- **Run** — inspection found the output is worse than undecidable, it is dimensionally
+  incoherent. `detect_cracks()` returns **array indices**, and `heal_crack()` then multiplies
+  those indices by `(1 - healing_rate)` as if an index were a crack width — so a crack at
+  index 97 "heals" to 77.6 of nothing. `precipitate_minerals()` is marked `# placeholder` and
+  returns population × 1e-6. The input is `np.random.normal(0.3, 0.2, 100)` with **no seed**,
+  so no two runs agree.
+- **Reality check** — but one declared parameter *is* testable: `healing_rate = 0.2 mm/hour`.
+  Published results for crystalline admixtures: cracks up to **0.4 mm** heal completely, with
+  150 μm closing in 28 days under water, and 400 μm in 28 days with 10% CSA plus 1.5% CA.
+  At 0.2 mm/hour the model would close **134 mm in 28 days** — about **336× the best
+  documented rate**, and 300× wider than any crack the literature reports sealing at all.
+- **Verdict** — **U6 is closed, and the answer flipped: FALSIFIED, not undecidable.** The
+  self-healing literature supplies exactly the external benchmark that was missing, and the
+  declared healing rate fails it by two and a half orders of magnitude.
+- **Edited claim** — `healing_rate` should be ~**6e-4 mm/hour** (0.4 mm over 28 days) to match
+  the best published crystalline-admixture performance. The current value is not a slow
+  approximation of reality; it is a different phenomenon.
+- **New unknowns** —
+  1. Seed the RNG, or the sim cannot be regression-tested at all.
+  2. Decide whether `detect_cracks` returns positions or widths, and make `heal_crack`
+     consume the same quantity.
+  3. Radiation exposure is in `CISSRConfig` (1,000 Gy tolerance) but no model uses it. The
+     whole premise is healing *under neutron flux*, and flux appears nowhere in the kinetics.
+
+---
+
+## Carried forward — revised
+
+*Supersedes the carried-forward list in the 2026-08-14 first-session entry above. Items 1, 2,
+3, 5 and 6 of that list are now closed by entries 6–11.*
+
+Still open, in the order they should be tackled:
+
+1. **How does the total heat load split across evaporative, geothermal, and free cooling?**
+   *(Entry 6.)* Everything else waits on this. Until the energy balance closes, no water
+   number in this repo means anything.
+2. Does the geothermal loop have a heat-rejection rating, or is it only ever soil irrigation?
+   *(Entry 6.)*
+3. Does the steam loop run at constant flow, or follow load? *(Entry 10.)*
+4. `thermoacoustic_offset()` silently ignores `capacity_mw` — `--capacity-mw 10` produces a
+   wrong answer with no warning. *(Entry 8.)*
+5. `cissr_sim.py` needs a seeded RNG, coherent crack units, and a healing rate near
+   6e-4 mm/hour before it can predict anything. *(Entry 11.)*
+6. Radiation flux is the entire premise of CISSR and appears in no kinetic model. *(Entry 11.)*
+
+**Sources for the external checks in entries 6 and 11**
+
+- [Data Center Water Usage: A Comprehensive Guide — dgtlInfra](https://dgtlinfra.com/data-center-water-usage/)
+- [A Guide to Data Center Water Usage Effectiveness (WUE) — Data Center Knowledge](https://www.datacenterknowledge.com/cooling/a-guide-to-data-center-water-usage-effectiveness-wue-and-best-practices)
+- [What Is Water Usage Effectiveness (WUE) in Data Centers? — Equinix](https://blog.equinix.com/blog/2024/11/13/what-is-water-usage-effectiveness-wue-in-data-centers/)
+- [Evaluation of Internal and Superficial Self-Healing of Cracks in Concrete with Crystalline Admixtures — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7663569/)
+- [Influence of Crystalline Admixtures and Their Synergetic Combinations on Autonomous Healing in Cracked Concrete — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC8781983/)
+- [Self-Healing Concrete with Crystalline Admixture — A Review (ResearchGate)](https://www.researchgate.net/publication/337746220_Self-healing_concrete_with_crystalline_admixture_-_a_review)

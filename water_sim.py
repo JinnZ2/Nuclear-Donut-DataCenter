@@ -18,21 +18,30 @@ Usage:
 Outputs PNG charts to ./sim_output/
 
 KNOWN MODEL DEFECTS — read before quoting any number from this script.
-Recorded 2026-08-14; see legacy/run-log.md entries 2-4 for the full write-up.
+Recorded 2026-08-14; see legacy/run-log.md entries 2-10 for the full write-up.
 
-  * The thermoacoustic offset is credited at a flat rate for seven months
-    regardless of whether there is any cooling load to offset, and recovery is
-    summed uncapped while net demand is separately clamped at zero. The result
-    is a reported "savings" figure that exceeds 100% of gross consumption,
-    which is physically impossible. Every downstream monthly and annual figure
-    for the warm months is affected.
-  * Consequently "peak water month" and "near-zero water months" describe the
-    defect, not the design.
-  * April is flagged frozen while also reporting evaporative cooling demand.
+FIXED
+  * Gallon conversion divided by 3785 instead of 3.785 (1000x error).
+  * Reported recovery double-counted the thermoacoustic offset.
+  * Status column reported a SOIL flag as the whole system's state.
 
-These are left unfixed on purpose: the correction depends on whether the offset
-is meant to replace evaporative load or to produce usable water, and that is an
-open design question, not a bug with one right answer.
+OPEN — the headline defect, and it is upstream of everything else:
+  * The evaporative model rejects `capacity * 0.30 * effectiveness`, which is
+    7-12% of the IT load. All IT power becomes heat and has to leave the
+    building; the remaining 88-93% is never accounted for anywhere in the
+    model. Implied WUE is 0.12-0.19 L/kWh against a real-world 1.55-2.5 L/kWh
+    for evaporatively-cooled facilities. Evaporative water demand is therefore
+    understated by roughly an order of magnitude.
+  * Because of that, the 160 kW thermoacoustic offset exceeds the evaporative
+    load it claims to displace in all 12 months, producing a "saving" above
+    100% of gross consumption. Correct the energy balance first — at full-load
+    rejection the 160 kW credit is ~16% of load and stops being impossible.
+  * Steam loss is constant with load as well as with ambient. Constant with
+    ambient is defensible; constant with load is not.
+
+The energy balance is left unfixed on purpose: how the total heat load splits
+across evaporative, geothermal, and free cooling is a design decision, and
+changing it rewrites every headline number in this project.
 """
 
 import argparse
@@ -384,7 +393,9 @@ def compute_monthly_budget(capacity_mw, thermoacoustic_kw, pipe_length_m,
             "steam_loss_L_day": steam,
             "thermoacoustic_offset_L_day": ta_offset,
             "total_consumption_L_day": consumption,
-            "total_recovery_L_day": recovery + ta_offset,
+            # `recovery` already includes ta_offset; adding it again double-counted
+            # the offset in every reported recovery total (run-log entry 5).
+            "total_recovery_L_day": recovery,
             "net_L_day": max(0, net_per_day),
             "net_L_month": max(0, net_per_day) * DAYS[i],
             "temp_C": TEMP_DB_C[i],
@@ -547,13 +558,26 @@ def print_report(months, capacity_mw, latitude_deg, coriolis_results):
     print(f"  {'Month':>5} {'Temp':>5} {'Evap':>8} {'Geo':>7} {'Steam':>7} "
           f"{'Cond':>6} {'Dew':>5} {'TA Off':>7} {'NET':>8} {'Status':>10}")
     print("  " + "-" * 80)
+    print("  (Status describes the cooling system; * = ground frozen, no geothermal irrigation)")
 
     annual_consumption = 0
     annual_recovery = 0
     annual_net = 0
 
     for m in months:
-        status = "FROZEN" if m["frozen"] else ("FREE" if m["free_cooling_available"] else "ACTIVE")
+        # `frozen` is a SOIL state (drives geothermal irrigation); evaporative
+        # cooling gates on AIR temperature. Reporting the soil flag as the whole
+        # system's status made April read as "FROZEN" while evaporating 2,867
+        # L/day. Status now describes the cooling system; soil is flagged with
+        # a trailing '*'. See run-log entry 9.
+        if m["evap_cooling_L_day"] <= 0:
+            status = "NO-EVAP"
+        elif m["free_cooling_available"]:
+            status = "FREE"
+        else:
+            status = "ACTIVE"
+        if m["frozen"]:
+            status += "*"
         print(f"  {m['month']:>5} {m['temp_C']:>4.0f}C {m['evap_cooling_L_day']:>8.0f} "
               f"{m['geothermal_L_day']:>7.0f} {m['steam_loss_L_day']:>7.0f} "
               f"{m['condenser_recovery_L_day']:>6.0f} {m['dew_harvest_L_day']:>5.1f} "
@@ -592,15 +616,20 @@ def print_report(months, capacity_mw, latitude_deg, coriolis_results):
     print(f"\n  Key Findings:")
     peak_month = max(months, key=lambda m: m["net_L_day"])
     print(f"    Peak water month:       {peak_month['month']} ({peak_month['net_L_day']:,.0f} L/day)")
-    zero_months = sum(1 for m in months if m["net_L_day"] < 100)
-    print(f"    Near-zero water months: {zero_months} (frozen + free cooling)")
+    zero_months = [m["month"] for m in months if m["net_L_day"] < 100]
+    print(f"    Near-zero water months: {len(zero_months)} ({', '.join(zero_months) or 'none'})")
+    if zero_months and all(m["evap_cooling_L_day"] > 0
+                           for m in months if m["month"] in zero_months):
+        print(f"      ^ note: these are the WARM months, driven to zero by the")
+        print(f"        over-credited offset below — not by freezing.")
     ta_savings = sum(m["thermoacoustic_offset_L_day"] * m["days"] for m in months)
     ta_pct = ta_savings / annual_consumption * 100 if annual_consumption > 0 else 0
     print(f"    Thermoacoustic savings: {ta_savings:,.0f} L/year ({ta_pct:.1f}% of gross)")
     if ta_pct > 100:
-        print(f"      ^ UNPHYSICAL: offset exceeds gross consumption. The offset is credited")
-        print(f"        with no cooling load to absorb it. Do not quote this figure, nor the")
-        print(f"        peak/near-zero months above. See legacy/run-log.md entries 2-4.")
+        print(f"      ^ UNPHYSICAL: offset exceeds gross consumption. Root cause is the")
+        print(f"        energy balance — evaporative load is understated ~10x, so the offset")
+        print(f"        has nothing to displace. Do not quote this figure, nor the")
+        print(f"        peak/near-zero months above. See legacy/run-log.md entries 6-8.")
 
     print(f"\n  Charts saved to sim_output/")
     print("=" * 70)
