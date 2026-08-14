@@ -1,3 +1,29 @@
+"""
+SUPERSEDED 2026-08-14 — retained as precedent, not as working code.
+
+This was the first attempt at the cooling-mode taxonomy. It is retired because:
+
+  1. Its mode thresholds diverged from the canonical Arduino spec in
+     Controller-overview.md and were never reconciled. Compare:
+
+       here:  temp > 90 or load > 95 -> MAX ; temp > 75 -> EVAP
+              humidity < 30 -> GEO ; load < 50 -> IDLE
+       spec:  temp > 80 and humidity > 40 -> EVAP ; temp > 85 -> MAX
+              temp > 60 and humidity < 20 -> GEO ; temp > 40 -> PULSE
+
+     They disagree on every threshold and on which sensors gate which mode.
+
+  2. Every sensor read is a random.uniform() stub, so a run cannot confirm or
+     falsify anything about the design. It is undecidable by construction.
+
+Canonical mode logic now lives in Controller-overview.md -> "Mode Logic (Arduino C)".
+See legacy/README.md for the retirement rules.
+
+Note: the Arduino spec has an ordering issue worth resolving before anyone
+reimplements this — EVAP is tested before MAX, so at temp 90 / humidity 50 the
+controller selects EVAP and MAX is unreachable. Unresolved as of retirement.
+"""
+
 import time
 import random
 

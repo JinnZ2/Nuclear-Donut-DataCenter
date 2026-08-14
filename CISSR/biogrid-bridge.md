@@ -37,12 +37,13 @@ Model Update
   - Both model wave phenomena; can share resonance logic
 - `water_sim.py` (Donut) ↔ `src/biogrid/water.py` (BioGrid)
   - Both model fluid dynamics; CISSR adds biological filtration
-- `Controller-modes-sim.py` (Donut) ↔ `src/biogrid/control.py` (BioGrid)
+- `Controller-overview.md` (Donut) ↔ `src/biogrid/control.py` (BioGrid)
   - Both use symbolic AI; can merge into unified control logic
+  - Donut-side mode logic is the Arduino C spec in `Controller-overview.md`. The earlier
+    Python prototype is retired to `legacy/Controller-modes-sim.py` — its thresholds
+    disagree with the spec, so do not bridge against it.
 
 ## Next Steps
 1. Create shared data schema (`schema/cissr.json`)
 2. Align simulation parameters
 3. Run cross-validation tests
-```
-

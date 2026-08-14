@@ -51,4 +51,3 @@
 1. Desktop prototype (Heat-dissipation-prototype.md)
 2. Small-scale reactor simulation (harmonic_sim.py)
 3. Full-scale emulation with CISSR models (cissr_sim.py)
-```

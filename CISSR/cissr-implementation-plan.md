@@ -33,5 +33,7 @@
 1. What is the optimal healing agent for each failure mode?
 2. How to balance healing speed vs. energy cost?
 3. Can microbes survive long-term in a nuclear environment?
+4. What should `cissr_sim.py` predict? It currently runs and reports healing counts, but
+   nothing states what those counts *should* be, so the output cannot be falsified.
+   See `legacy/run-log.md`.
 
-4. 

@@ -16,6 +16,23 @@ Usage:
   python3 water_sim.py [--capacity-mw 1] [--latitude 46.5]
 
 Outputs PNG charts to ./sim_output/
+
+KNOWN MODEL DEFECTS — read before quoting any number from this script.
+Recorded 2026-08-14; see legacy/run-log.md entries 2-4 for the full write-up.
+
+  * The thermoacoustic offset is credited at a flat rate for seven months
+    regardless of whether there is any cooling load to offset, and recovery is
+    summed uncapped while net demand is separately clamped at zero. The result
+    is a reported "savings" figure that exceeds 100% of gross consumption,
+    which is physically impossible. Every downstream monthly and annual figure
+    for the warm months is affected.
+  * Consequently "peak water month" and "near-zero water months" describe the
+    defect, not the design.
+  * April is flagged frozen while also reporting evaporative cooling demand.
+
+These are left unfixed on purpose: the correction depends on whether the offset
+is meant to replace evaporative load or to produce usable water, and that is an
+open design question, not a bug with one right answer.
 """
 
 import argparse
@@ -27,6 +44,12 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+# ---------------------------------------------------------------------------
+# Unit conversions
+# ---------------------------------------------------------------------------
+LITERS_PER_GALLON = 3.785
+WATER_COST_PER_1000GAL = 5.50  # USD
 
 # ---------------------------------------------------------------------------
 # Climate data — Northern Minnesota (approximate monthly averages)
@@ -451,9 +474,7 @@ def plot_water_budget(months, capacity_mw, outdir):
                 f"{val:,.0f}k L", ha="center", fontsize=10, fontweight="bold")
 
     # add cost annotation
-    water_cost_per_1000gal = 5.50  # USD
-    liters_per_gallon = 3.785
-    annual_cost = (annual_net / liters_per_gallon) / 1000 * water_cost_per_1000gal
+    annual_cost = (annual_net / LITERS_PER_GALLON) / 1000 * WATER_COST_PER_1000GAL
     ax.text(0.5, 0.85, f"Annual water cost: ${annual_cost:,.0f}",
             transform=ax.transAxes, fontsize=12, fontweight="bold",
             ha="center", bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5))
@@ -542,10 +563,10 @@ def print_report(months, capacity_mw, latitude_deg, coriolis_results):
         annual_net += m["net_L_month"]
 
     print(f"\n  Annual Summary:")
-    print(f"    Total consumption:      {annual_consumption:>12,.0f} L/year ({annual_consumption / 3785:,.0f} gal)")
+    print(f"    Total consumption:      {annual_consumption:>12,.0f} L/year ({annual_consumption / LITERS_PER_GALLON:,.0f} gal)")
     print(f"    Total recovery + offset:{annual_recovery:>12,.0f} L/year")
-    print(f"    Net demand:             {annual_net:>12,.0f} L/year ({annual_net / 3785:,.0f} gal)")
-    water_cost = (annual_net / 3785) / 1000 * 5.50
+    print(f"    Net demand:             {annual_net:>12,.0f} L/year ({annual_net / LITERS_PER_GALLON:,.0f} gal)")
+    water_cost = (annual_net / LITERS_PER_GALLON) / 1000 * WATER_COST_PER_1000GAL
     print(f"    Estimated water cost:   ${water_cost:>11,.0f} /year")
 
     print(f"\n  Coriolis Effects on Water Systems:")
@@ -574,7 +595,12 @@ def print_report(months, capacity_mw, latitude_deg, coriolis_results):
     zero_months = sum(1 for m in months if m["net_L_day"] < 100)
     print(f"    Near-zero water months: {zero_months} (frozen + free cooling)")
     ta_savings = sum(m["thermoacoustic_offset_L_day"] * m["days"] for m in months)
-    print(f"    Thermoacoustic savings: {ta_savings:,.0f} L/year ({ta_savings / annual_consumption * 100 if annual_consumption > 0 else 0:.1f}% of gross)")
+    ta_pct = ta_savings / annual_consumption * 100 if annual_consumption > 0 else 0
+    print(f"    Thermoacoustic savings: {ta_savings:,.0f} L/year ({ta_pct:.1f}% of gross)")
+    if ta_pct > 100:
+        print(f"      ^ UNPHYSICAL: offset exceeds gross consumption. The offset is credited")
+        print(f"        with no cooling load to absorb it. Do not quote this figure, nor the")
+        print(f"        peak/near-zero months above. See legacy/run-log.md entries 2-4.")
 
     print(f"\n  Charts saved to sim_output/")
     print("=" * 70)

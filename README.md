@@ -25,13 +25,15 @@ This project visualizes a next-generation data center optimized for:
 - HTML + CSS for the visual model
 - Biomimicry principles (leaf, ant colony, spiral forms)
 - Steam thermodynamics + passive cooling design
-- JS or simulation to be added (future)
+- Python simulations — acoustic/thermoacoustic, water budget, and self-healing kinetics
 
 ## Economic Advantages
 
 - 50-60% operational cost reduction
 - Up to $155M in savings over 20 years
 - Rapid ROI (6-14 months in some models)
+
+> These are design-stage projections, not measured results. Nothing here has been built.
 
 ## Coming Soon
 
@@ -53,10 +55,32 @@ This project visualizes a next-generation data center optimized for:
 - `Remediation-toolkit.md` - Environmental remediation physics toolkit
 - `harmonic_sim.py` - Resonant mode, standing wave, and Coriolis airflow simulation
 - `water_sim.py` - Monthly water budget, recovery, and Coriolis water flow simulation
+- `legacy/` - Retired work, kept as precedent — see below
+
+## How This Project Handles Being Wrong
+
+The design moves the way science does:
+
+```
+hypothesize → run → result → falsified? → edit the claim → search for the new unknowns → rerun
+```
+
+Two files carry that record, and neither is optional reading:
+
+- **[`legacy/run-log.md`](legacy/run-log.md)** — every time a claim in this repo was actually
+  executed and checked: what it predicted, what the run printed, and whether that falsified
+  it. Currently open: four defects in the water model, including a thermoacoustic "saving"
+  that exceeds 100% of water consumed. **Check it before quoting any simulation number.**
+- **[`legacy/README.md`](legacy/README.md)** — what has been retired, and why. Superseded
+  files are moved here with their reasoning attached; they are never deleted. A claim that
+  was tested and replaced is still a result, and the precedent it set still carries.
 
 ## Status
 
 Ongoing design and simulation phase. Seeking collaborators, symbolic optimization, and feedback.
+
+Simulations run, but "runs" is not "validated" — several published figures are known to be
+wrong and are documented as such rather than quietly patched.
 
 ---
 
@@ -75,6 +99,7 @@ The **Cyber-Integrated Self-Sustaining Regeneration (CISSR)** framework bridges 
 - [Implementation Plan](CISSR/cissr-implementation-plan.md)
 - [Sensor Specification](CISSR/cissr_sensors_spec.md)
 - [Simulation Module](CISSR/cissr_sim.py)
+- [Babel Protocol](CISSR/babel-protocol.md) and its [literature review](CISSR/docs/babel-literature-review.md)
 
 Made with resilience in mind by [JinnZ2](https://github.com/JinnZ2)
 
