@@ -33,7 +33,10 @@ This project visualizes a next-generation data center optimized for:
 - Up to $155M in savings over 20 years
 - Rapid ROI (6-14 months in some models)
 
-> These are design-stage projections, not measured results. Nothing here has been built.
+> **Unsourced.** These three figures are the most-quoted numbers in the project and trace to
+> no calculation anywhere in this repository. They predate the corrected water model and have
+> not been rederived against it. Treat them as aspiration until someone shows the arithmetic —
+> see `legacy/run-log.md` entry 14.
 
 ## Coming Soon
 
@@ -54,7 +57,8 @@ This project visualizes a next-generation data center optimized for:
 - `Thermoacoustic-harvesting.md` - Acoustic energy harvesting from donut resonance
 - `Remediation-toolkit.md` - Environmental remediation physics toolkit
 - `harmonic_sim.py` - Resonant mode, standing wave, and Coriolis airflow simulation
-- `water_sim.py` - Monthly water budget, recovery, and Coriolis water flow simulation
+- `water_sim.py` - Energy-conserving heat allocation and monthly water budget
+- `transition_sim.py` - Highest-leverage modifications, change propagation, transition pathways
 - `legacy/` - Retired work, kept as precedent — see below
 
 ## How This Project Handles Being Wrong
@@ -69,11 +73,11 @@ Two files carry that record, and neither is optional reading:
 
 - **[`legacy/run-log.md`](legacy/run-log.md)** — every time a claim in this repo was actually
   executed and checked: what it predicted, what the run printed, and whether that falsified
-  it. Eleven entries so far. The one that matters most: **the evaporative cooling model does
-  not conserve energy** — it rejects 7–12% of the IT load and never accounts for the rest, so
-  water demand is understated by roughly 10×. Implied WUE is 0.12–0.19 L/kWh against a
-  real-world 1.55–2.5 L/kWh for evaporatively-cooled facilities.
-  **Check the log before quoting any simulation number.**
+  it. Sixteen entries so far. The largest: the evaporative cooling model **did not conserve
+  energy** — it rejected 7–12% of the IT load and discarded the rest, understating water
+  demand by ~37×. That model has been rebuilt around an explicit heat allocation that must
+  sum to the load, and net demand is now **~4.0 M L/yr per MW (0.455 L/kWh)** with seven
+  fully dry-cooled months. **Check the log before quoting any simulation number.**
 - **[`legacy/README.md`](legacy/README.md)** — what has been retired, and why. Superseded
   files are moved here with their reasoning attached; they are never deleted. A claim that
   was tested and replaced is still a result, and the precedent it set still carries.

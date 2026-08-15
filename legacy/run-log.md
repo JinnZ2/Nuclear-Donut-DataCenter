@@ -314,3 +314,178 @@ Still open, in the order they should be tackled:
 - [Evaluation of Internal and Superficial Self-Healing of Cracks in Concrete with Crystalline Admixtures — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7663569/)
 - [Influence of Crystalline Admixtures and Their Synergetic Combinations on Autonomous Healing in Cracked Concrete — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC8781983/)
 - [Self-Healing Concrete with Crystalline Admixture — A Review (ResearchGate)](https://www.researchgate.net/publication/337746220_Self-healing_concrete_with_crystalline_admixture_-_a_review)
+
+---
+
+## 2026-08-14 (third session) — Rebuilding the cooling model, and what it broke
+
+The energy balance from Entry 6 was corrected rather than documented, on instruction. This
+session records the rebuild, the results that changed, and one claim that the corrected model
+*vindicated* rather than falsified.
+
+---
+
+### Entry 12 — The cooling model now conserves energy
+
+- **Claim** — `evaporative_water()` = `capacity × 0.30 × effectiveness`, rejecting 7–12% of
+  the IT load with the remainder unaccounted (Entry 6).
+- **Change** — replaced with an explicit allocation that must sum to the full load. Paths are
+  taken cheapest-water-first: **free cooling → thermoacoustic → geothermal → evaporative**.
+  The tower is the residual and the only water consumer. Makeup = evaporation + blowdown,
+  with 75–80% of tower heat leaving as latent heat and blowdown = evaporation/(CoC−1).
+  `energy_balance_check()` now runs on every invocation and exits non-zero if the paths do
+  not sum to the load.
+- **Run** — the balance closes in all 12 months. Results move enormously:
+
+  | | Before | After |
+  |---|---|---|
+  | Net demand | 108,720 L/yr | **3,988,994 L/yr** |
+  | WUE (net) | 0.119–0.187 L/kWh | **0.455 L/kWh** |
+  | Peak water month | Jan (steam loss only) | **Jul** |
+  | Fully dry-cooled months | n/a | **7** (Jan–Apr, Oct–Dec) |
+  | Thermoacoustic contribution | 128% of gross (impossible) | **22.4% of gross** |
+
+- **Verdict** — the new numbers are **credible where the old ones were not**. WUE of 0.455
+  sits in the best-in-class band (0.3–0.7), which is what a cold-climate site with seven
+  dry-cooled months *should* look like. Peak demand in July is what a cooling load *should*
+  do. The 128% impossibility is now structurally unreachable: the thermoacoustic path takes
+  heat before the tower sees it, so it cannot displace water the tower never used.
+- **Edited claim** — net water demand is ~4.0 M L/yr per MW, ~37× the previously published
+  figure. Every artefact sized off the old number is stale — see Entry 14.
+- **New unknowns** —
+  1. Free cooling ramps on the **monthly mean** dry-bulb. Real economiser hours need hourly
+     TMY data. This is now the model's weakest joint and it sits directly under the headline
+     recommendation (Entry 15).
+  2. `geo_w_per_m = 40` is general ground-loop field practice, not measured for this geometry.
+  3. The 160 kW thermoacoustic capacity is still `harmonic_sim.py`'s own estimate, never
+     measured.
+
+---
+
+### Entry 13 — `Thermoacoustic-harvesting.md` was right the whole time
+
+- **Claim** — that document states evaporative cooling runs **7,000–25,000 L/day per MW**,
+  and that 80–240 kW of thermoacoustic capacity handles **8–24% of cooling load with zero
+  water**.
+- **Run** — the *old* `water_sim.py` produced 2,867–4,659 L/day, contradicting the document
+  by roughly 5×. The two files sat in the same repository disagreeing, and nobody noticed.
+  The corrected model produces up to **36,186 L/day** in July, and puts the 160 kW path at
+  **22.4% of gross water avoided**.
+- **Verdict** — **HELD, and it falsified the simulation rather than the other way round.**
+  The prose document was the more accurate artefact. The corrected model now agrees with both
+  its figures.
+- **Edited claim** — none needed for the document. The lesson is about method: an internal
+  contradiction between two artefacts is evidence that one of them is wrong, and it is worth
+  checking *which* before assuming the code wins. Code that runs is not thereby correct.
+- **New unknowns** — are there other cross-document contradictions nobody has checked? No
+  systematic reconciliation pass has ever been run over this repo.
+
+---
+
+### Entry 14 — Correcting a number does not deliver the correction
+
+- **Claim** — fixing `water_sim.py` fixes the project's water figures.
+- **Run** — it does not. Six downstream artefacts were sized, written, or argued using the
+  old numbers. `transition_sim.py` section 2 enumerates them; the high-severity ones are the
+  BOM's water infrastructure (sized off 108,720 L/yr, now 37× low) and the README's
+  "50–60% operational cost reduction" and "$155M over 20 years", which trace to **no
+  calculation anywhere in the repository**.
+- **Verdict** — **FALSIFIED as a working assumption.** A corrected number is not delivered
+  until everything sized off the old number has been resized.
+- **Edited claim** — the propagation list is part of the correction, not a follow-up to it.
+- **New unknowns** — the README economics are the most-quoted and least-supported figures in
+  the project. They need either a derivation or an explicit "unsourced" marker.
+
+---
+
+### Entry 15 — Highest-leverage modification, and why it is not yet a result
+
+- **Claim** — `transition_sim.py` ranks small modifications by litres saved per $1k of
+  capital, computed by perturbing the corrected model one parameter at a time.
+- **Run** — the ranking is dominated by one lever:
+
+  | Rank | Modification | Water saved | L/yr per $1k |
+  |---|---|---|---|
+  | 1 | Supply water 32 °C → 45 °C (ASHRAE W3 → W4) | **92.0%** | 30,592 |
+  | 2 | Cooling tower CoC 4 → 6 | 9.2% | 8,158 |
+  | 3 | Cooling auxiliary load 10% → 6% | 4.6% | 1,212 |
+  | 4 | Thermoacoustic 160 → 300 kW | 19.5% | 865 |
+  | 5 | Geothermal loop 600 → 1800 m | 6.1% | 643 |
+  | 6 | Ground loop 40 → 50 W/m | 0.8% | 556 |
+
+  Stacking the top three gives 3,682,145 L/yr against an individual sum of 4,219,939 —
+  a **13% overlap**, because the levers compete for the same heat.
+- **Verdict** — **NOT YET A RESULT.** The top lever works by widening the free-cooling band,
+  and free cooling is precisely what monthly-mean temperatures model worst (Entry 12,
+  unknown 1). Northern Minnesota's hottest month *averages* 24 °C, but summer afternoons
+  reach the low-to-mid 30s, and those are exactly the hours that need the tower. A monthly
+  mean cannot see them, so "12 fully dry-cooled months" is almost certainly too good.
+- **Edited claim** — the annual **water** saving from warmer supply water is probably real
+  and large. The **capital** saving is not: the tower must still be sized for the peak hour
+  even if it runs a few dozen hours a year. You cannot buy 92% less tower, only run it 92%
+  less. "Zero water" is not a claim this model can support at any parameter setting.
+- **New unknowns** —
+  1. Hourly TMY data for the site is needed before any of this ranking is quotable.
+  2. Does the IT equipment actually qualify for W4 (45 °C) supply? That is a procurement
+     constraint, not a thermal one.
+  3. Every capex and effort figure in `transition_sim.py` section 1 is a **declared
+     assumption**, unverified against any quote. The ranking is sensitive to them.
+
+---
+
+### Entry 16 — `cissr_sim.py` rebuilt against the literature
+
+- **Claim** — `healing_rate = 0.2 mm/hour`, cracks identified by array index, unseeded RNG
+  (Entry 11).
+- **Change** — healing rate set to `0.4 mm / (28 × 24 h)` = **5.95e-4 mm/hour**, the best
+  documented crystalline-admixture performance. Added a `MAX_HEALABLE_CRACK_MM = 0.4`
+  ceiling, because a kinetics model without one will always over-promise. `detect_cracks()`
+  now returns position *and* width as separate quantities; `heal_crack()` consumes width.
+  RNG seeded via `--seed` (default 42).
+- **Run** — `python3 CISSR/cissr_sim.py` now reports 5 cracks, widths 0.025–0.228 mm, all
+  fully closed in a 28-day window, 0 exceeding the healable ceiling. Reproducible run to run.
+- **Verdict** — the sim is now **falsifiable**, which is the only claim being made for it.
+  Its outputs are consistent with the literature because they were built from it; that is not
+  independent confirmation of anything.
+- **New unknowns** —
+  1. `precipitate_minerals()` is still a placeholder with arbitrary units. Explicitly marked.
+  2. Radiation flux remains absent from every kinetic model, while being CISSR's entire
+     premise. `CISSRConfig.radiation_tolerance` is declared and never read.
+  3. Stress-to-crack-width conversion is 1 mm per unit of stress above threshold — an
+     invented scaling with nothing behind it.
+
+---
+
+## Carried forward — revised (third session)
+
+*Supersedes both earlier carried-forward lists.*
+
+**Blocking anything quotable:**
+
+1. **Hourly TMY data for the site.** Monthly means are now the binding limitation on the
+   headline recommendation. *(E15)*
+2. **README economics** — "50–60% cost reduction", "$155M over 20 years" — trace to no
+   calculation. Derive or mark unsourced. *(E14)*
+3. **BOM water infrastructure** sized off a figure now known to be 37× low. *(E14)*
+
+**Model inputs never measured:**
+
+4. `geo_w_per_m = 40`, thermoacoustic 160 kW, stress→crack-width scaling. *(E12, E16)*
+5. Every capex/effort figure in `transition_sim.py`, and every month/dollar in its pathway
+   section. Gate *categories* are real; the numbers are placeholders. *(E15)*
+
+**Structural gaps:**
+
+6. Radiation flux appears in no CISSR kinetic model. *(E16)*
+7. `precipitate_minerals()` still a placeholder. *(E16)*
+8. No systematic cross-document reconciliation pass has ever been run — Entry 13 found one
+   contradiction by accident, and there is no reason to think it was the only one. *(E13)*
+
+**Sources for the external checks in entries 12 and 16**
+
+- [Cooling Tower Cycles of Concentration — Dober](https://www.dober.com/smart-release/resources/cooling-tower-cycles-of-concentration)
+- [Cooling Tower Blowdown Calculation](https://h2ocooling.com/cooling-tower-blowdown-calculation/)
+- [Understanding Cycles of Concentration in Evaporative Systems — Guardian](https://guardianchem.com/articles/what-are-cycles-of-concentration/)
+- [ASHRAE Thermal Guidelines for Liquid-Cooled Data Processing Environments — HPAC](https://www.hpac.com/archive/article/20925053/ashrae-introduces-thermal-guidelines-for-liquid-cooled-data-processing-environments)
+- [What's the right temperature for water in liquid-cooled data centers? — DCD](https://www.datacenterdynamics.com/en/analysis/hot-water-cold-water/)
+- [Evaluation of Internal and Superficial Self-Healing of Cracks in Concrete with Crystalline Admixtures — PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7663569/)
