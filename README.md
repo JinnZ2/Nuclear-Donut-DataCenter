@@ -112,7 +112,7 @@ Made with resilience in mind by [JinnZ2](https://github.com/JinnZ2)
 
 ## License
 
-MIT or CC0 - feel free to use, improve, or deploy.
+CC0-1.0 or CC0 - feel free to use, improve, or deploy.
 
 ---
 
