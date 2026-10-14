@@ -12,7 +12,7 @@
 Nuclear-Donut-DataCenter/
 ├── CLAUDE.md                      # This file — AI assistant guide
 ├── README.md                      # Project overview and key features
-├── LICENSE                        # MIT License
+├── LICENSE                        # CC0 1.0 Universal (eligible owner-controlled work)
 ├── Index.html                     # Interactive 3D/CSS visualization of the donut design
 ├── Design-concept.md              # Architectural geometry and radial layout specs
 ├── Construction-sim.md            # Build blueprint and structural design
@@ -201,7 +201,7 @@ open design question. Arithmetic errors get fixed; modelling choices get recorde
 ### Important notes for AI assistants
 - This is a **design specification** project, not executable software — do not look for or suggest adding build/test infrastructure unless explicitly requested
 - The project creator built this on a cellphone — keep contributions accessible and self-contained
-- License is MIT or CC0 — all contributions are freely shareable
+- The current license is CC0 1.0 Universal for eligible owner-controlled work; see `LICENSE_HISTORY.md` for scope and historical MIT text
 - Physics equations in `Remediation-toolkit.md` use LaTeX-style notation in code blocks
 - When editing documentation, preserve the existing formatting style and level of technical detail
 - New root-level docs stay at the root. `CISSR/` and `legacy/` are the only established
@@ -214,5 +214,5 @@ open design question. Arithmetic errors get fixed; modelling choices get recorde
 ## Git Information
 
 - **Default branch:** `main`
-- **License:** MIT
+- **License:** CC0 1.0 Universal for eligible owner-controlled work (see `LICENSE_HISTORY.md`)
 - **Created by:** [JinnZ2](https://github.com/JinnZ2)
