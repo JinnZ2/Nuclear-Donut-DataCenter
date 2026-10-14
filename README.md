@@ -1,3 +1,5 @@
+> Before reading or editing anything here, read READ_ME_THIS_WAY.md.
+> Mismatches, dead ends and odd names in this repo are kept on purpose.
 # Nuclear Donut Data Center
 
 A biomimetic, nuclear-integrated data center design using radial steam distribution, evaporative cooling, and ultra-low-cost land reuse within nuclear exclusion zones.
@@ -112,7 +114,7 @@ Made with resilience in mind by [JinnZ2](https://github.com/JinnZ2)
 
 ## License
 
-MIT or CC0 - feel free to use, improve, or deploy.
+CC0 1.0 Universal applies to rights held by the owner in this repository; see [LICENSE](LICENSE) and [LICENSE_HISTORY.md](LICENSE_HISTORY.md) for current scope and the historical MIT statement.
 
 ---
 
